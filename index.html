@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&M Financial OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080a0d;--panel:#141921;--raised:#1b2230;--hover:#202b3c;
+  --bdr:rgba(255,255,255,0.055);--bdr2:rgba(255,255,255,0.10);--bdr3:rgba(255,255,255,0.18);
+  --tx:#ede9e1;--tx2:#7a8496;--tx3:#3c4455;
+  --g:#00d97e;--gd:rgba(0,217,126,.10);--g2:rgba(0,217,126,.20);
+  --a:#ffb830;--ad:rgba(255,184,48,.10);
+  --r:#ff5f5f;--rd:rgba(255,95,95,.10);
+  --b:#4fa3ff;--bd:rgba(79,163,255,.10);
+  --pu:#9b7bff;--te:#26d4c0;--pi:#ff7eb3;
+  --fw:'Outfit',sans-serif;--fd:'Cormorant Garamond',Georgia,serif;--fm:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:var(--fw);font-size:13px;line-height:1.55;min-height:100vh}
+
+/* EDIT BANNER */
+#editBanner{position:fixed;top:0;left:0;right:0;z-index:999;background:#f0c040;color:#2a1800;font-size:12px;font-weight:500;padding:6px 20px;display:none;align-items:center;justify-content:space-between}
+#editBanner.show{display:flex}
+.epulse{width:7px;height:7px;border-radius:50%;background:#2a1800;margin-right:8px;animation:bl 1.2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* NAV */
+.nav{display:flex;align-items:stretch;border-bottom:1px solid var(--bdr);background:rgba(8,10,13,.96);position:sticky;top:0;z-index:200;backdrop-filter:blur(20px);transition:top .2s}
+.nav.em{top:32px}
+.brand{padding:0 22px;display:flex;align-items:center;gap:8px;border-right:1px solid var(--bdr)}
+.bname{font-family:var(--fd);font-size:20px;font-style:italic;white-space:nowrap}
+.bname em{color:var(--g);font-style:normal}
+.notion-badge{font-size:9px;font-family:var(--fm);color:var(--te);background:rgba(38,212,192,.1);border:1px solid rgba(38,212,192,.2);padding:2px 6px;border-radius:10px;white-space:nowrap}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:pu 2.5s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
+.ltxt{font-size:10px;color:var(--tx3);font-family:var(--fm)}
+.tabs{display:flex;flex:1;overflow-x:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:0 15px;height:50px;display:flex;align-items:center;font-size:12px;color:var(--tx3);cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap;font-family:var(--fw)}
+.tab:hover{color:var(--tx2)}
+.tab.on{color:var(--tx);border-bottom-color:var(--g)}
+.navr{display:flex;align-items:center;gap:6px;padding:0 14px;border-left:1px solid var(--bdr)}
+.nb{padding:5px 11px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--bdr2);background:transparent;color:var(--tx2);transition:.15s;font-family:var(--fw)}
+.nb:hover{border-color:var(--bdr3);color:var(--tx)}
+.nb.ea{background:var(--ad);border-color:var(--a);color:var(--a)}
+.nb.sv{border-color:var(--g);color:var(--g);background:var(--gd)}
+.notion-sync{font-size:10px;color:var(--te);font-family:var(--fm);display:flex;align-items:center;gap:4px}
+.ndot{width:5px;height:5px;border-radius:50%;background:var(--te);animation:pu 3s infinite}
+
+/* PAGES */
+.pg{display:none;padding:22px 24px;max-width:1460px;margin:0 auto;animation:fu .25s ease both}
+.pg.on{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* EDITABLE TEXT */
+.et{outline:none;border-bottom:1px dashed transparent;transition:.15s;cursor:default;border-radius:2px}
+body.em .et{cursor:text;border-bottom-color:rgba(255,184,48,.5);background:rgba(255,184,48,.04);padding:0 2px}
+body.em .et:hover{background:rgba(255,184,48,.10);border-bottom-color:var(--a)}
+.et:focus{background:rgba(255,184,48,.18)!important;border-bottom-color:var(--g)!important;border-radius:3px}
+.en{outline:none;border-bottom:1px dashed transparent;transition:.15s;cursor:default;border-radius:2px;font-family:var(--fm)}
+body.em .en{cursor:text;border-bottom-color:rgba(79,163,255,.5);background:rgba(79,163,255,.04);padding:0 2px}
+body.em .en:hover{background:rgba(79,163,255,.10);border-bottom-color:var(--b)}
+.en:focus{background:rgba(79,163,255,.18)!important;border-bottom-color:var(--g)!important;border-radius:3px}
+
+/* GRIDS */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.mb{margin-bottom:14px}
+
+/* CARDS */
+.card{background:var(--panel);border:1px solid var(--bdr);border-radius:12px;padding:18px}
+.csm{background:var(--panel);border:1px solid var(--bdr);border-radius:8px;padding:13px}
+.ct{font-size:10px;font-weight:400;letter-spacing:.09em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px;font-family:var(--fm)}
+.cd{font-family:var(--fd);font-size:30px;line-height:1;margin-bottom:3px;font-weight:500}
+.cd.g{color:var(--g)}.cd.r{color:var(--r)}.cd.a{color:var(--a)}.cd.b{color:var(--b)}
+.cs{font-size:11px;color:var(--tx3)}
+.ph{margin-bottom:20px}
+.ptitle{font-family:var(--fd);font-size:26px;margin-bottom:3px;font-style:italic}
+.psub{font-size:12px;color:var(--tx3)}
+.notion-source{font-size:10px;color:var(--te);font-family:var(--fm);margin-top:4px;display:flex;align-items:center;gap:4px}
+
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);padding:7px 10px;text-align:left;border-bottom:1px solid var(--bdr);font-family:var(--fm);font-weight:400}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--bdr);color:var(--tx);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--hover)}
+.tbl td.r{text-align:right;font-family:var(--fm)}
+.tbl td.g{color:var(--g);text-align:right;font-weight:500;font-family:var(--fm)}
+.tbl td.a{color:var(--a);text-align:right;font-weight:500;font-family:var(--fm)}
+.tbl td.re{color:var(--r);text-align:right;font-weight:500;font-family:var(--fm)}
+.tbl td.b{color:var(--b);text-align:right;font-weight:500;font-family:var(--fm)}
+.tbl td.dim{color:var(--tx3);font-size:11px}
+.tbl tr.tr td{background:var(--raised);font-weight:500}
+.tbl tr.p1 td{background:rgba(255,184,48,.03)}
+.tbl tr.p2 td{background:rgba(255,95,95,.03)}
+.tbl tr.p3 td{background:rgba(0,217,126,.03)}
+.tbl tr.w3 td{background:rgba(0,217,126,.025)}
+.tbl tr.w2 td{background:rgba(79,163,255,.02)}
+.tbl tr.income td{background:rgba(0,217,126,.02)}
+.tbl tr.expense td{background:rgba(255,95,95,.02)}
+
+/* BADGES */
+.bdg{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-family:var(--fm)}
+.bdg.g{background:var(--gd);color:var(--g);border:1px solid rgba(0,217,126,.2)}
+.bdg.a{background:var(--ad);color:var(--a);border:1px solid rgba(255,184,48,.2)}
+.bdg.r{background:var(--rd);color:var(--r);border:1px solid rgba(255,95,95,.2)}
+.bdg.b{background:var(--bd);color:var(--b);border:1px solid rgba(79,163,255,.2)}
+.bdg.p{background:rgba(155,123,255,.12);color:var(--pu);border:1px solid rgba(155,123,255,.2)}
+.bdg.t{background:rgba(38,212,192,.12);color:var(--te);border:1px solid rgba(38,212,192,.2)}
+.bdg.pi{background:rgba(255,126,179,.12);color:var(--pi);border:1px solid rgba(255,126,179,.2)}
+
+/* PROGRESS */
+.prog{margin-bottom:16px}
+.prog-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.prog-n{font-size:13px;font-weight:500}
+.prog-bar{height:4px;background:var(--raised);border-radius:2px;overflow:hidden;margin-bottom:4px}
+.prog-fill{height:100%;border-radius:2px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);font-family:var(--fm)}
+
+/* PHASE CARDS */
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.pc{border:1px solid var(--bdr2);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+.pc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.pc.p1::after{background:var(--a)}.pc.p2::after{background:var(--r)}.pc.p3::after{background:var(--g)}
+.pc-num{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);font-family:var(--fm);margin-bottom:6px}
+.pc-title{font-family:var(--fd);font-size:20px;font-style:italic;margin-bottom:3px}
+.pc.p1 .pc-title{color:var(--a)}.pc.p2 .pc-title{color:var(--r)}.pc.p3 .pc-title{color:var(--g)}
+.pc-dates{font-size:11px;color:var(--tx2);font-family:var(--fm);margin-bottom:10px}
+.pcr{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--bdr)}
+.pcr:last-child{border-bottom:none}
+.pcl{color:var(--tx2)}.pcv{font-family:var(--fm);font-weight:500}
+.pcv.g{color:var(--g)}.pcv.a{color:var(--a)}.pcv.r{color:var(--r)}.pcv.d{color:var(--tx3)}
+.pc-foot{margin-top:10px;font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid}
+.pc.p1 .pc-foot{background:var(--ad);border-color:rgba(255,184,48,.2);color:var(--a)}
+.pc.p2 .pc-foot{background:var(--rd);border-color:rgba(255,95,95,.2);color:var(--r)}
+.pc.p3 .pc-foot{background:var(--gd);border-color:rgba(0,217,126,.2);color:var(--g)}
+
+/* PAYCHECK WEEK CARDS */
+.wk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.wkc{border:1px solid var(--bdr2);border-radius:10px;padding:14px;position:relative;overflow:hidden}
+.wkc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.wkc.w3::before{background:var(--g)}.wkc.w2::before{background:var(--b)}
+.wk-title{font-size:12px;font-weight:500;margin-bottom:2px}
+.wk-sub{font-size:10px;color:var(--tx3);font-family:var(--fm);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.wkr{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+.wkl{color:var(--tx2)}.wkv{font-family:var(--fm);font-weight:500}
+.wkv.g{color:var(--g)}.wkv.b{color:var(--b)}.wkv.a{color:var(--a)}.wkv.r{color:var(--r)}.wkv.d{color:var(--tx3)}
+.wk-tot{display:flex;justify-content:space-between;font-size:13px;font-weight:500;padding-top:8px;border-top:1px solid var(--bdr);margin-top:4px}
+
+/* EDIT ROWS */
+.er{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px}
+.er:last-child{border-bottom:none}
+.el{color:var(--tx2)}.ev{font-family:var(--fm);font-weight:500;text-align:right}
+.ev.g{color:var(--g)}.ev.a{color:var(--a)}.ev.b{color:var(--bl)}.ev.r{color:var(--r)}
+.esec{font-size:10px;font-weight:400;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);padding:8px 0 5px;border-bottom:1px solid var(--bdr2);margin-top:4px;font-family:var(--fm)}
+
+/* NOTION ACCOUNT ROWS */
+.acct-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.acct-row:last-child{border-bottom:none}
+.acct-name{font-weight:500;color:var(--tx)}
+.acct-sub{font-size:10px;color:var(--tx3);font-family:var(--fm);margin-top:1px}
+.acct-bal{font-family:var(--fd);font-size:18px}
+.acct-bal.pos{color:var(--g)}.acct-bal.neg{color:var(--r)}.acct-bal.neu{color:var(--b)}
+
+/* GOALS */
+.goal-card{background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:16px;margin-bottom:10px;position:relative}
+.goal-card.custom{border-style:dashed}
+.goal-actions{position:absolute;top:12px;right:12px;display:flex;gap:6px}
+.goal-btn{padding:3px 9px;border-radius:5px;font-size:10px;cursor:pointer;border:1px solid var(--bdr2);background:transparent;color:var(--tx3);font-family:var(--fm);transition:.15s}
+.goal-btn:hover{color:var(--tx);border-color:var(--bdr3)}
+.goal-btn.del:hover{color:var(--r);border-color:var(--r)}
+.goal-tag{font-size:10px;font-family:var(--fm);color:var(--tx3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+
+/* CATEGORY SPENDING */
+.cat-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bdr)}
+.cat-row:last-child{border-bottom:none}
+.cat-bar-wrap{flex:1;height:4px;background:var(--raised);border-radius:2px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:2px}
+.cat-name{font-size:12px;color:var(--tx2);min-width:140px}
+.cat-amt{font-size:12px;font-family:var(--fm);font-weight:500;min-width:70px;text-align:right}
+.cat-pct{font-size:10px;color:var(--tx3);font-family:var(--fm);min-width:36px;text-align:right}
+
+/* ADD GOAL MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--bdr2);border-radius:14px;padding:24px;width:480px;max-width:90vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:var(--fd);font-size:22px;font-style:italic;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--tx3);margin-bottom:20px}
+.mfield{margin-bottom:14px}
+.mfield label{display:block;font-size:11px;color:var(--tx2);font-family:var(--fm);letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.mfield input,.mfield select{width:100%;background:var(--raised);border:1px solid var(--bdr2);border-radius:7px;padding:9px 12px;color:var(--tx);font-family:var(--fw);font-size:13px;outline:none;transition:.15s}
+.mfield input:focus,.mfield select:focus{border-color:var(--g)}
+.color-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.cswatch{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:.15s}
+.cswatch.sel{border-color:white}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr)}
+.mbtn{padding:8px 18px;border-radius:7px;font-size:12px;cursor:pointer;font-family:var(--fw);transition:.15s}
+.mbtn.cancel{background:transparent;border:1px solid var(--bdr2);color:var(--tx2)}
+.mbtn.cancel:hover{color:var(--tx)}
+.mbtn.create{background:var(--g);border:none;color:#000;font-weight:500}
+.mbtn.create:hover{background:#00f58a}
+
+/* ALERTS */
+.ab{border-radius:8px;padding:12px 14px;margin-bottom:10px;border:1px solid}
+.ab.g{background:var(--gd);border-color:rgba(0,217,126,.2)}
+.ab.a{background:var(--ad);border-color:rgba(255,184,48,.2)}
+.ab.r{background:var(--rd);border-color:rgba(255,95,95,.2)}
+.ab-t{font-size:13px;font-weight:500;margin-bottom:3px}
+.ab.g .ab-t{color:var(--g)}.ab.a .ab-t{color:var(--a)}.ab.r .ab-t{color:var(--r)}
+.ab-d{font-size:12px;color:var(--tx2);line-height:1.55}
+
+/* RULES & CHECKLIST */
+.rule{display:flex;gap:12px;padding:12px 14px;background:var(--raised);border:1px solid var(--bdr);border-radius:8px;margin-bottom:8px}
+.rn{width:24px;height:24px;border-radius:50%;background:var(--panel);border:1px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--g);flex-shrink:0;margin-top:1px;font-family:var(--fm)}
+.rt{font-size:13px;font-weight:500;margin-bottom:3px}
+.rd{font-size:12px;color:var(--tx2);line-height:1.55}
+.cl{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--raised);border:1px solid var(--bdr);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:.15s}
+.cl:hover{border-color:var(--bdr2)}
+.cl.done{opacity:.38}
+.cl.done .cl-t{text-decoration:line-through;color:var(--tx3)}
+.cl-box{width:17px;height:17px;border-radius:4px;border:1px solid var(--bdr2);background:var(--panel);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:10px;color:var(--g);font-family:var(--fm)}
+.cl-t{font-size:13px;font-weight:500;margin-bottom:2px}
+.cl-d{font-size:11px;color:var(--tx3);line-height:1.5}
+.cl-tag{font-size:10px;color:var(--g);margin-top:3px;font-family:var(--fm)}
+
+.nwbar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-bottom:11px}
+.nwleg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:14px}
+.nwli{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2);font-family:var(--fm)}
+.nwdot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.div{height:1px;background:var(--bdr);margin:12px 0}
+.slbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);padding-bottom:8px;border-bottom:1px solid var(--bdr);margin-bottom:12px;font-family:var(--fm)}
+.flash{position:fixed;bottom:24px;right:24px;background:var(--g);color:#000;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:500;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none;font-family:var(--fm)}
+.flash.show{opacity:1}
+
+@media(max-width:1000px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g21{grid-template-columns:1fr}.pgrid{grid-template-columns:1fr}.wk-grid{grid-template-columns:1fr}.pg{padding:14px}}
+</style>
+</head>
+<body>
+
+<div id="editBanner">
+  <div style="display:flex;align-items:center"><div class="epulse"></div>Edit mode — amber underline = text · blue underline = number · all projections update live</div>
+  <div style="display:flex;gap:8px"><button class="nb sv" onclick="saveData()">Save</button><button class="nb" onclick="toggleEdit()">Exit</button></div>
+</div>
+
+<nav class="nav" id="nav">
+  <div class="brand">
+    <div class="bname">D&amp;<em>M</em></div>
+    <div class="notion-badge">Notion live</div>
+    <div style="display:flex;align-items:center;gap:4px"><div class="ldot"></div><div class="ltxt">synced</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="show('plan')">Plan</button>
+    <button class="tab" onclick="show('live')">Live Data</button>
+    <button class="tab" onclick="show('paychecks')">Paychecks</button>
+    <button class="tab" onclick="show('calendar')">Calendar</button>
+    <button class="tab" onclick="show('goals')">Goals</button>
+    <button class="tab" onclick="show('budget')">Budget</button>
+    <button class="tab" onclick="show('retirement')">401k + HSA</button>
+    <button class="tab" onclick="show('rules')">CFO Rules</button>
+    <button class="tab" onclick="show('checklist')">Action Plan</button>
+  </div>
+  <div class="navr">
+    <div class="notion-sync"><div class="ndot"></div>May 1, 2026</div>
+    <button class="nb" onclick="exportData()">Export</button>
+    <button class="nb" onclick="importData()">Import</button>
+    <button class="nb" id="editBtn" onclick="toggleEdit()">Edit data</button>
+  </div>
+</nav>
+
+<!-- PLAN -->
+<div id="pg-plan" class="pg on">
+  <div class="ph">
+    <div class="ptitle"><span class="et" data-key="appTitle">D&M Financial OS</span></div>
+    <div class="psub"><span class="et" data-key="asOfDate">May 1, 2026</span> · Zero-based · Every dollar assigned · <span class="et" data-key="weddingDate">January 23, 2027</span> wedding</div>
+    <div class="notion-source"><div class="ndot"></div>Notion live · Accounts, goals &amp; transactions sync from Finance Manager Plus</div>
+  </div>
+  <div class="pgrid" id="phaseCards"></div>
+  <div class="g4" id="summaryMetrics"></div>
+  <div class="g2">
+    <div class="card"><div class="ct">Goal progress — live from Notion</div><div id="ovGoals"></div></div>
+    <div class="card">
+      <div class="ct">Net worth · <span class="et" data-key="asOfDate">May 1</span></div>
+      <div id="nwbar" class="nwbar"></div>
+      <div id="nwleg" class="nwleg"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:10px;color:var(--tx3);font-family:var(--fm);margin-bottom:2px">Total net worth</div><div id="nw-total" style="font-family:var(--fd);font-size:22px;color:var(--g)"></div></div>
+        <div><div style="font-size:10px;color:var(--tx3);font-family:var(--fm);margin-bottom:2px">Retirement + HSA</div><div id="nw-retire" style="font-family:var(--fd);font-size:22px"></div></div>
+        <div><div style="font-size:10px;color:var(--tx3);font-family:var(--fm);margin-bottom:2px">WF checking (live)</div><div id="nw-wf" style="font-family:var(--fd);font-size:22px;color:var(--r)"></div></div>
+        <div><div style="font-size:10px;color:var(--tx3);font-family:var(--fm);margin-bottom:2px">Crypto</div><div id="nw-crypto" style="font-family:var(--fd);font-size:22px;color:var(--a)"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIVE DATA -->
+<div id="pg-live" class="pg">
+  <div class="ph"><div class="ptitle">Live Notion Data</div><div class="psub">Real account balances, transactions and spending — pulled from Finance Manager Plus · May 2026</div></div>
+  <div class="g2">
+    <div class="card mb">
+      <div class="ct">Account balances — live from Notion</div>
+      <div id="notionAccounts"></div>
+    </div>
+    <div>
+      <div class="card mb">
+        <div class="ct">May 2026 transactions — from Notion</div>
+        <div style="overflow-x:auto"><table class="tbl" id="notionTxns" style="min-width:500px"></table></div>
+      </div>
+      <div class="card">
+        <div class="ct">Spending by category — May 2026</div>
+        <div id="catSpending"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Income vs expenses — May 2026 (from Notion transactions)</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px" id="incomeExpSummary"></div>
+    <div style="position:relative;height:200px"><canvas id="incomeChart"></canvas></div>
+  </div>
+</div>
+
+<!-- PAYCHECKS -->
+<div id="pg-paychecks" class="pg">
+  <div class="ph"><div class="ptitle">Paycheck Reality</div><div class="psub">ONEOK is biweekly. Gore/Insight and Warner are weekly. Income alternates between 3-income and 2-income weeks.</div></div>
+  <div class="wk-grid" id="weekTypeCards"></div>
+  <div class="g2">
+    <div class="card mb">
+      <div class="ct">Paycheck schedule — next 8 weeks</div>
+      <table class="tbl" id="paycheckSchedule"></table>
+    </div>
+    <div class="card mb">
+      <div class="ct">Monthly income reality (actual, not averaged)</div>
+      <table class="tbl" id="monthlyIncomeTable"></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Phase allocations by week type</div>
+    <table class="tbl" id="phaseAllocTable"></table>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div id="pg-calendar" class="pg">
+  <div class="ph"><div class="ptitle">Full Weekly Calendar</div><div class="psub">Real paycheck schedule mapped week by week to completion.</div></div>
+  <div class="card mb"><div style="overflow-x:auto"><table class="tbl" id="calTbl" style="min-width:1000px"></table></div></div>
+  <div class="g2">
+    <div class="card"><div class="ct">Balance growth</div><div style="position:relative;height:260px"><canvas id="growthChart"></canvas></div><div id="chartLeg" style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap"></div></div>
+    <div class="card"><div class="ct">Phase completion</div><div id="completionSummary"></div><div class="div"></div><div class="ct">D&M milestones</div><div id="dmMilestones"></div></div>
+  </div>
+</div>
+
+<!-- GOALS -->
+<div id="pg-goals" class="pg">
+  <div class="ph"><div class="ptitle">Goals</div><div class="psub">Required goals phase-locked. Personal goals update manually — add deposits anytime.</div></div>
+  <div class="g2">
+    <div>
+      <div class="slbl">Required — phase goals (Notion-synced)</div>
+      <div id="requiredGoals"></div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)">
+        <div class="slbl" style="margin-bottom:0;border:none;padding:0">Personal goals</div>
+        <button class="nb" onclick="openAddGoal()">+ Add goal</button>
+      </div>
+      <div id="personalGoals"></div>
+      <div id="noGoalsMsg" style="text-align:center;padding:30px 20px;color:var(--tx3);font-size:12px;border:1px dashed var(--bdr2);border-radius:10px;display:none">
+        <div style="font-family:var(--fd);font-size:20px;color:var(--tx2);margin-bottom:6px;font-style:italic">No personal goals yet</div>
+        <div>Add a goal — baby fund, vacation, car, anything.</div>
+        <button class="nb" onclick="openAddGoal()" style="margin-top:12px;padding:7px 16px">+ Add your first goal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUDGET -->
+<div id="pg-budget" class="pg">
+  <div class="ph"><div class="ptitle">Zero-Based Budget</div><div class="psub">Income − fixed − lifestyle − goals = $0. Click any value in edit mode to change it.</div></div>
+  <div class="g21">
+    <div>
+      <div class="card mb"><div class="ct">Fixed obligations</div><table class="tbl" id="fixedTable"></table></div>
+      <div class="card"><div class="ct">Variable lifestyle</div><table class="tbl" id="varTable"></table></div>
+    </div>
+    <div>
+      <div class="card mb"><div class="ct">Income to zero</div><div id="zeroMath"></div></div>
+      <div class="card mb"><div class="ct">Phase allocations</div><div id="phaseAllocBudget"></div></div>
+      <div class="card"><div class="ct">Pre-tax deductions (already out of take-home)</div><div id="pretaxRows"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RETIREMENT -->
+<div id="pg-retirement" class="pg">
+  <div class="ph"><div class="ptitle">401(k) + HSA</div><div class="psub">Full employer contribution picture · 2026 limits</div></div>
+  <div class="ab a mb"><div class="ab-t">⚠ HSA over-contribution — fix immediately</div><div class="ab-d">$700/mo × 12 = $8,400 over the $8,000 IRS family limit. 6% excise tax on overage. Reduce ONEOK payroll HSA to $667/mo now.</div></div>
+  <div class="g3 mb">
+    <div class="csm"><div class="ct">Your 401k contributions</div><div class="cd b">$23,920</div><div class="cs">$920 biweekly × 26 · toward $24,500 limit</div></div>
+    <div class="csm"><div class="ct">Employer match</div><div class="cd g">$7,176</div><div class="cs">$276 biweekly × 26 · free money</div></div>
+    <div class="csm"><div class="ct">Profit sharing</div><div class="cd" style="color:var(--pu)">$8,665</div><div class="cs">$2,166.24/quarter × 4 · free money</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">ONEOK 401(k) live balance + projected EOY 2026</div>
+      <table class="tbl">
+        <thead><tr><th>Component</th><th>Amount</th><th>Type</th></tr></thead>
+        <tbody>
+          <tr><td>Current balance (Notion live)</td><td class="b">$33,994</td><td class="dim">As of May 1</td></tr>
+          <tr><td>Remaining employee (19 × $920)</td><td class="r">+$17,480</td><td class="dim">Your money</td></tr>
+          <tr><td>Remaining match (19 × $276)</td><td class="g">+$5,244</td><td class="dim">Free</td></tr>
+          <tr><td>Remaining profit sharing (Q2+Q3+Q4)</td><td style="color:var(--pu);text-align:right;font-weight:500">+$6,499</td><td class="dim">Free</td></tr>
+          <tr><td>Market return est. (6%, 8 mo)</td><td class="g">+$1,360</td><td class="dim">Growth</td></tr>
+          <tr class="tr"><td>Projected EOY 2026</td><td class="g">$64,577</td><td class="dim">+$30,583</td></tr>
+        </tbody>
+      </table>
+      <div class="div"></div>
+      <div class="ct">Profit sharing schedule</div>
+      <table class="tbl">
+        <thead><tr><th>Quarter</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Q1 2026</td><td>Apr 7</td><td style="color:var(--pu);text-align:right;font-family:var(--fm)">$2,166</td><td><span class="bdg g">Paid ✓</span></td></tr>
+          <tr><td>Q2 2026</td><td>~Jul</td><td style="color:var(--pu);text-align:right;font-family:var(--fm)">$2,166</td><td><span class="bdg a">Upcoming</span></td></tr>
+          <tr><td>Q3 2026</td><td>~Oct</td><td style="color:var(--pu);text-align:right;font-family:var(--fm)">$2,166</td><td><span class="bdg a">Upcoming</span></td></tr>
+          <tr><td>Q4 2026</td><td>~Jan 27</td><td style="color:var(--pu);text-align:right;font-family:var(--fm)">$2,166</td><td><span class="bdg a">Upcoming</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="ct">Combined retirement (Notion live balances)</div>
+      <table class="tbl">
+        <thead><tr><th>Account</th><th>Live balance</th><th>EOY 2026 est.</th></tr></thead>
+        <tbody>
+          <tr><td>Emory 401(k) — frozen</td><td class="r">$121,798</td><td class="b">$126,670</td></tr>
+          <tr><td>ONEOK 401(k) — active</td><td class="r">$33,994</td><td class="g">$64,577</td></tr>
+          <tr><td>HSA — Optum</td><td class="r">$3,913</td><td class="g">$9,452</td></tr>
+          <tr class="tr"><td>Total</td><td class="b">$159,705</td><td class="g">$200,699</td></tr>
+        </tbody>
+      </table>
+      <div class="div"></div>
+      <div class="ct">Net worth trajectory</div>
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Net worth</th><th>Event</th></tr></thead>
+        <tbody>
+          <tr><td>May 1, 2026</td><td class="b">$231,341</td><td class="dim">Now (Notion live)</td></tr>
+          <tr><td>Aug 7, 2026</td><td class="g">~$285,000</td><td class="dim">Wedding funded</td></tr>
+          <tr><td>Sep 11, 2026</td><td class="g">~$299,000</td><td class="dim">EF funded · Phase 3</td></tr>
+          <tr><td>Dec 31, 2026</td><td class="g">~$385,000</td><td class="dim">EOY 2026</td></tr>
+          <tr><td>Dec 31, 2027</td><td class="g">~$610,000</td><td class="dim">Full Phase 3 year</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- RULES -->
+<div id="pg-rules" class="pg">
+  <div class="ph"><div class="ptitle">CFO Rules</div><div class="psub">8 non-negotiable operating principles.</div></div>
+  <div class="g2"><div id="rulesL"></div><div id="rulesR"></div></div>
+</div>
+
+<!-- CHECKLIST -->
+<div id="pg-checklist" class="pg">
+  <div class="ph"><div class="ptitle">Action Plan — May 1, 2026</div><div class="psub">Ranked by impact. Start today.</div></div>
+  <div class="g2">
+    <div><div class="slbl">Today</div><div id="cl-today"></div><div class="slbl" style="margin-top:16px">This week</div><div id="cl-week"></div></div>
+    <div><div class="slbl">Phase triggers</div><div id="cl-phases"></div><div class="slbl" style="margin-top:16px">Ongoing</div><div id="cl-ongoing"></div></div>
+  </div>
+</div>
+
+<!-- ADD GOAL MODAL -->
+<div class="modal-bg" id="addGoalModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Add a personal goal</div>
+    <div class="modal-sub">Track any savings goal. Update the balance manually whenever you make a deposit.</div>
+    <div class="mfield"><label>Goal name</label><input type="text" id="gName" placeholder="e.g. Baby fund, Dream vacation, New car"></div>
+    <div class="mfield"><label>Emoji (optional)</label><input type="text" id="gEmoji" placeholder="👶 🌴 🚗" maxlength="4" style="width:80px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="mfield"><label>Current balance</label><input type="number" id="gCurrent" placeholder="0" min="0"></div>
+      <div class="mfield"><label>Target amount</label><input type="number" id="gTarget" placeholder="10000" min="1"></div>
+    </div>
+    <div class="mfield"><label>Notes (optional)</label><input type="text" id="gNotes" placeholder="Saving a little at a time, no rush"></div>
+    <div class="mfield"><label>Color</label><div class="color-grid" id="colorGrid"></div></div>
+    <div class="modal-actions">
+      <button class="mbtn cancel" onclick="closeAddGoal()">Cancel</button>
+      <button class="mbtn create" onclick="saveGoal()">Add goal</button>
+    </div>
+  </div>
+</div>
+
+<div class="flash" id="flash">Saved ✓</div>
+<input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script>
+/* ══ NOTION LIVE DATA (fetched at build time, May 1 2026) ══════ */
+const NOTION = {
+  lastSync: 'May 1, 2026',
+  accounts: [
+    {name:'WellsFargo Account 3284', sub:'checking', cur:2753.97, avail:4709.60, bucket:'Personal'},
+    {name:'Emergency Fund Goal', sub:'brokerage', cur:11566.85, avail:null, bucket:'Personal'},
+    {name:'Wedding Goal', sub:'brokerage', cur:28022.75, avail:null, bucket:'Personal'},
+    {name:'D&M Longterm Investment Acct', sub:'brokerage', cur:9976.77, avail:null, bucket:'Personal'},
+    {name:'EMORY UNIVERSITY RETIREMENT PLAN', sub:'401k', cur:121798.37, avail:null, bucket:'Personal'},
+    {name:'ONEOK, INC. 401(K) PLAN', sub:'401k', cur:33993.84, avail:null, bucket:'Personal'},
+    {name:'Health Savings Account', sub:'hsa', cur:3913.00, avail:null, bucket:'Personal'},
+    {name:'COINBASE', sub:'brokerage', cur:21700.00, avail:null, bucket:'Personal'},
+    {name:'AMEX Blue Cash Everyday®', sub:'credit card', cur:177.53, avail:10775, bucket:'Personal'},
+    {name:'M1 Investment Acct', sub:'ira', cur:215.12, avail:null, bucket:'Personal'},
+    {name:'Airbnb Account 6492', sub:'checking', cur:2988.00, avail:2988, bucket:'Airbnb Property'},
+    {name:'287 14TH ST Bank Account 0714', sub:'checking', cur:486.71, avail:486.71, bucket:'287 14th St Property'},
+  ],
+  transactions: [
+    {date:'2026-05-01', summary:'ONEOK PAYROLL', amount:2357.32, type:'Income', category:'Income'},
+    {date:'2026-05-01', summary:'INSPYR Solutions PAYROLL', amount:2047.63, type:'Income', category:'Income'},
+    {date:'2026-05-01', summary:'INSIGHT GLOBAL PAYROLL', amount:2426.59, type:'Income', category:'Income'},
+    {date:'2026-05-01', summary:'FID BKG — Emergency Fund Z52155929', amount:-1000.00, type:'Expense', category:'Savings/Investment'},
+    {date:'2026-05-01', summary:'FID BKG — Wedding Goal Z36461855', amount:-1250.00, type:'Expense', category:'Savings/Investment'},
+    {date:'2026-05-01', summary:'AMERICAN EXPRESS ACH PMT', amount:-2425.91, type:'Expense', category:'Debt'},
+    {date:'2026-05-01', summary:'ZELLE TO KENJA', amount:-200.00, type:'Expense', category:'House Cleaning'},
+  ],
+  goals: [
+    {name:'Emergency Fund', saved:16279.14, goal:50000, category:'Emergency Fund', status:'Active', weeklyRate:1250, targetDate:'2026-10-31'},
+    {name:'Wedding Goal', saved:16279.14, goal:50000, category:'Wedding Goal', status:'Active', weeklyRate:1250, targetDate:'2026-10-31'},
+  ]
+};
+
+/* ══ DATA MODEL ═══════════════════════════════════════════════ */
+const DEFAULTS = {
+  appTitle:'D&M Financial OS', asOfDate:'May 1, 2026', weddingDate:'January 23, 2027',
+  income:24493, oneok:2357, ig:2426, wb:2047, oneokStartDate:'2026-05-01',
+  fixed:{mortgage:2475.79,hoa:1018.20,airbnb:2500,sba:74,loan401k:415,comcast:105},
+  variable:{food:700,groceries:400,transport:150,subscriptions:175,cleaning:200,pet:60,dagemFree:250,meleyFree:200,misc:150},
+  balances:{efCurrent:16279.14,efTarget:50000,wedCurrent:28022.75,wedTarget:46000,wedPaid:14000,dmCurrent:9976.77,wfCurrent:2753.97,wfTarget:5000,oneok401k:33993.84,emory401k:121798.37,hsa:3913,crypto:21700},
+  wedWeekly:1250, dmMin:500,
+  personalGoals:[]
+};
+
+const COLORS=['#00d97e','#ffb830','#ff5f5f','#4fa3ff','#9b7bff','#26d4c0','#ff7eb3','#fb923c','#a3e635','#f472b6','#38bdf8','#c084fc'];
+let D=JSON.parse(JSON.stringify(DEFAULTS)), editMode=false, gChart=null, iChart=null, editingGoalId=null, selectedColor=COLORS[0];
+
+/* ══ PERSISTENCE ══════════════════════════════════════════════ */
+function loadData(){try{const s=localStorage.getItem('dm-v7');if(s)D=JSON.parse(s);}catch(e){}}
+function saveData(){localStorage.setItem('dm-v7',JSON.stringify(D));showFlash('Saved ✓');}
+function showFlash(m){const f=document.getElementById('flash');f.textContent=m;f.classList.add('show');setTimeout(()=>f.classList.remove('show'),2000);}
+function exportData(){const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dm-v7-'+new Date().toISOString().slice(0,10)+'.json';a.click();}
+function importData(){document.getElementById('importInput').click();}
+function handleImport(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{D=JSON.parse(ev.target.result);saveData();renderAll();showFlash('Imported ✓');}catch(e){alert('Invalid JSON.');}};r.readAsText(f);}
+
+/* ══ CALC ═════════════════════════════════════════════════════ */
+function calc(){
+  const fixedT=Object.values(D.fixed).reduce((a,b)=>a+b,0);
+  const varT=Object.values(D.variable).reduce((a,b)=>a+b,0);
+  const fixWk=fixedT/4.33, varWk=varT/4.33;
+  const i3=D.oneok+D.ig+D.wb, i2=D.ig+D.wb;
+  const p3=i3-fixWk-varWk, p2=i2-fixWk-varWk;
+  const start=new Date(D.oneokStartDate||'2026-05-01');
+  let efB=D.balances.efCurrent, wedB=D.balances.wedCurrent, dmB=D.balances.dmCurrent, wfB=D.balances.wfCurrent;
+  let wedDone=false,efDone=false,wedWk=null,efWk=null;
+  const weeks=[];
+  for(let wk=1;wk<=60;wk++){
+    const d=new Date(start.getTime()+(wk-1)*7*86400000);
+    const hasO=(wk%2===1), inc=hasO?i3:i2, pool=hasO?p3:p2;
+    let wfA=0,wedA=0,efA=0,dmA=0,phase='';
+    let pl=pool;
+    if(wk===1){wfA=Math.min(D.balances.wfTarget-D.balances.wfCurrent,pl);pl-=wfA;}
+    if(efDone&&wedDone){dmA=Math.round(pl);phase='3';}
+    else if(wedDone){efA=Math.max(0,Math.round(Math.min(pl-D.dmMin,D.balances.efTarget-efB)));dmA=D.dmMin;phase='2';}
+    else{wedA=Math.min(D.wedWeekly,Math.max(0,D.balances.wedTarget-wedB));efA=Math.max(0,Math.round(pl-wedA-D.dmMin));dmA=D.dmMin;phase=wk===1?'1A':'1B';}
+    wfB=Math.min(wfB+wfA,D.balances.wfTarget);wedB=Math.min(wedB+wedA,D.balances.wedTarget);efB=Math.min(efB+efA,D.balances.efTarget);dmB+=dmA;
+    if(wedB>=D.balances.wedTarget&&!wedDone){wedDone=true;wedWk=wk;}
+    if(efB>=D.balances.efTarget&&!efDone){efDone=true;efWk=wk;}
+    weeks.push({wk,d,ds:d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}),hasO,inc,pool:Math.round(pl),wfA,wf:wfB,wedA,wed:wedB,efA,ef:efB,dmA,dm:dmB,phase,wedDone:wedB>=D.balances.wedTarget,efDone:efB>=D.balances.efTarget});
+    if(efDone&&wk>=(efWk||0)+4)break;
+  }
+  return{fixedT,varT,fixWk,varWk,i3,i2,p3,p2,poolAvg:((p3+p2)/2)*4.33,weeks,wedWk,efWk,dm3Monthly:((p3+p2)/2)*4.33};
+}
+
+function wkStr(C,n){const w=C.weeks.find(w=>w.wk===n);return w?w.d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'—';}
+const fmt=n=>'$'+Math.round(n).toLocaleString();
+const pct=(a,b)=>Math.min(100,Math.round(a/b*100));
+const $=id=>document.getElementById(id);
+
+/* ══ EDIT MODE ════════════════════════════════════════════════ */
+function toggleEdit(){editMode=!editMode;document.body.classList.toggle('em',editMode);$('editBtn').classList.toggle('ea',editMode);$('editBtn').textContent=editMode?'Exit edit':'Edit data';$('editBanner').classList.toggle('show',editMode);$('nav').classList.toggle('em',editMode);if(editMode)bindEditable();}
+function bindEditable(){
+  document.querySelectorAll('.et[data-key]').forEach(el=>{el.contentEditable='true';el.spellcheck=false;el.onblur=()=>{setV(D,el.dataset.key,el.textContent.trim());renderAll();saveData();};el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}};});
+  document.querySelectorAll('.en[data-key]').forEach(el=>{el.contentEditable='true';el.spellcheck=false;el.onblur=()=>{const v=parseFloat(el.textContent.replace(/[$,]/g,'').trim());if(!isNaN(v)){setV(D,el.dataset.key,v);renderAll();saveData();}};el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}};});
+}
+function setV(obj,path,val){const p=path.split('.');let o=obj;for(let i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=val;}
+function getV(obj,path){return path.split('.').reduce((o,k)=>o?.[k],obj);}
+function ET(key,display){const v=display!==undefined?display:getV(D,key);return`<span class="et" data-key="${key}" contenteditable="false">${v}</span>`;}
+function EN(key,pre='$',suf=''){const v=getV(D,key);return`${pre}<span class="en" data-key="${key}" contenteditable="false">${Math.round(v).toLocaleString()}</span>${suf}`;}
+
+/* ══ RENDER ALL ═══════════════════════════════════════════════ */
+function renderAll(){
+  const C=calc();
+  renderPlan(C); renderLive(); renderPaychecks(C); renderCalendar(C);
+  renderGoals(C); renderBudget(C); renderRules(); renderChecklist(C);
+  if(editMode)bindEditable();
+}
+
+/* ── PLAN ── */
+function renderPlan(C){
+  const ws=C.wedWk?wkStr(C,C.wedWk):'—', es=C.efWk?wkStr(C,C.efWk):'—';
+  const p3=Math.round(C.p3), p2=Math.round(C.p2);
+  const ef1b3=p3-D.wedWeekly-D.dmMin, ef1b2=Math.max(0,p2-D.wedWeekly-D.dmMin);
+  $('phaseCards').innerHTML=`
+  <div class="pc p1"><div class="pc-num">Phase 1 · May 1 → ${ws.split(',')[0]}</div><div class="pc-title">${ET('phase1Title','Fund wedding. Build EF.')}</div><div class="pc-dates">${C.wedWk||14} weeks · wedding → ${fmt(D.balances.wedTarget)}</div>
+    <div class="pcr"><span class="pcl">WF buffer (week 1 only)</span><span class="pcv a">${fmt(D.balances.wfTarget-D.balances.wfCurrent)} once</span></div>
+    <div class="pcr"><span class="pcl">Wedding 3-income wk</span><span class="pcv a">${EN('wedWeekly','$','/wk')}</span></div>
+    <div class="pcr"><span class="pcl">Wedding 2-income wk</span><span class="pcv a">$${Math.min(D.wedWeekly,p2).toLocaleString()}/wk</span></div>
+    <div class="pcr"><span class="pcl">EF — 3-income week</span><span class="pcv r">$${ef1b3.toLocaleString()}/wk</span></div>
+    <div class="pcr"><span class="pcl">EF — 2-income week</span><span class="pcv r">$${ef1b2.toLocaleString()}/wk</span></div>
+    <div class="pcr"><span class="pcl">D&M minimum</span><span class="pcv d">${EN('dmMin','$','/wk')}</span></div>
+    <div class="pc-foot">Wedding funded ${ws.split(',')[0]}. EF at ~${fmt(C.weeks.find(w=>w.wedDone)?.ef||0)} by end of phase.</div>
+  </div>
+  <div class="pc p2"><div class="pc-num">Phase 2 · ${ws.split(',')[0]} → ${es.split(',')[0]}</div><div class="pc-title">${ET('phase2Title','Hammer the EF.')}</div><div class="pc-dates">~${C.efWk&&C.wedWk?C.efWk-C.wedWk:'—'} weeks · all power to EF</div>
+    <div class="pcr"><span class="pcl">Wedding</span><span class="pcv d">$0 — done ✓</span></div>
+    <div class="pcr"><span class="pcl">EF — 3-income week</span><span class="pcv r">$${(p3-D.dmMin).toLocaleString()}/wk</span></div>
+    <div class="pcr"><span class="pcl">EF — 2-income week</span><span class="pcv r">$${(p2-D.dmMin).toLocaleString()}/wk</span></div>
+    <div class="pcr"><span class="pcl">D&M minimum</span><span class="pcv d">$${D.dmMin}/wk</span></div>
+    <div class="pc-foot">EF hits ${fmt(D.balances.efTarget)} on ${es.split(',')[0]}.</div>
+  </div>
+  <div class="pc p3"><div class="pc-num">Phase 3 · ${es.split(',')[0]} → Forever</div><div class="pc-title">${ET('phase3Title','Maximum wealth.')}</div><div class="pc-dates">Both goals done · full D&M forever</div>
+    <div class="pcr"><span class="pcl">D&M 3-income week</span><span class="pcv g">$${p3.toLocaleString()}/wk</span></div>
+    <div class="pcr"><span class="pcl">D&M 2-income week</span><span class="pcv g">$${p2.toLocaleString()}/wk</span></div>
+    <div class="pcr"><span class="pcl">D&M avg monthly</span><span class="pcv g">${fmt(C.dm3Monthly)}/mo</span></div>
+    <div class="pcr"><span class="pcl">D&M annual rate</span><span class="pcv g">${fmt(C.dm3Monthly*12)}/yr</span></div>
+    <div class="pc-foot">${fmt(C.dm3Monthly)}/mo avg. At 8%: $1M in ~4 years.</div>
+  </div>`;
+
+  $('summaryMetrics').innerHTML=`
+  <div class="csm"><div class="ct">Wedding funded</div><div class="cd a">${ws.split(',')[0]}</div><div class="cs a">${ET('weddingDate')} deadline</div></div>
+  <div class="csm"><div class="ct">EF funded ($50K)</div><div class="cd r">${es.split(',')[0]}</div><div class="cs r">${C.efWk?C.efWk+' weeks from today':'—'}</div></div>
+  <div class="csm"><div class="ct">Phase 3 D&M avg</div><div class="cd g">${fmt(C.dm3Monthly)}</div><div class="cs g">per month from ${es.split(',')[0]}</div></div>
+  <div class="csm"><div class="ct">WF balance (Notion)</div><div class="cd b">${fmt(D.balances.wfCurrent)}</div><div class="cs">Build to $5K this week · gap ${fmt(Math.max(0,D.balances.wfTarget-D.balances.wfCurrent))}</div></div>`;
+
+  // Goals overview
+  const goals=[
+    {n:'Emergency Fund',cur:D.balances.efCurrent,tgt:D.balances.efTarget,c:'#ff5f5f',note:`Notion: $${D.balances.efCurrent.toLocaleString(undefined,{minimumFractionDigits:2})}`},
+    {n:'Wedding Fund',cur:D.balances.wedCurrent,tgt:D.balances.wedTarget,c:'#ffb830',note:`Notion: $${D.balances.wedCurrent.toLocaleString(undefined,{minimumFractionDigits:2})} · $${D.balances.wedPaid.toLocaleString()} paid`},
+    {n:'D&M Investment',cur:D.balances.dmCurrent,tgt:50000,c:'#4fa3ff',note:`Notion: $${D.balances.dmCurrent.toLocaleString(undefined,{minimumFractionDigits:2})}`},
+    {n:'WF Buffer',cur:D.balances.wfCurrent,tgt:D.balances.wfTarget,c:'#00d97e',note:`Live: $${D.balances.wfCurrent.toLocaleString(undefined,{minimumFractionDigits:2})} · target $5K`},
+  ];
+  $('ovGoals').innerHTML=goals.map(g=>{
+    const p=pct(g.cur,g.tgt);
+    return`<div class="prog"><div class="prog-h"><span class="prog-n">${g.n}</span><span style="font-size:12px;font-weight:500;color:${g.c};font-family:var(--fm)">${p}%</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${g.c}"></div></div>
+    <div class="prog-meta"><span style="color:${g.c}">${fmt(g.cur)}</span><span>${fmt(g.tgt)}</span></div>
+    <div style="font-size:10px;color:var(--te);margin-top:2px;font-family:var(--fm)">⬡ ${g.note}</div></div>`;
+  }).join('')+D.personalGoals.slice(0,2).map(g=>{
+    const p=pct(g.current,g.target);
+    return`<div class="prog"><div class="prog-h"><span class="prog-n">${g.emoji||''} ${g.name}</span><span class="bdg t" style="font-size:10px">Personal</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${g.color}"></div></div>
+    <div class="prog-meta"><span style="color:${g.color}">${fmt(g.current)}</span><span>${fmt(g.target)}</span></div></div>`;
+  }).join('');
+
+  // NW bar
+  const nwItems=[
+    {l:'Emory 401k',v:D.balances.emory401k,c:'#9b7bff'},{l:'ONEOK 401k',v:D.balances.oneok401k,c:'#4fa3ff'},
+    {l:'D&M',v:D.balances.dmCurrent,c:'#26d4c0'},{l:'Wedding',v:D.balances.wedCurrent,c:'#ffb830'},
+    {l:'EF',v:D.balances.efCurrent,c:'#ff5f5f'},{l:'HSA',v:D.balances.hsa,c:'#00d97e'},
+    {l:'WF',v:D.balances.wfCurrent,c:'#555'},{l:'Crypto',v:D.balances.crypto,c:'#fb923c'}
+  ];
+  const tot=nwItems.reduce((a,b)=>a+b.v,0);
+  $('nwbar').innerHTML=nwItems.map(n=>`<div style="flex:${n.v/tot};background:${n.c}"></div>`).join('');
+  $('nwleg').innerHTML=nwItems.map(n=>`<div class="nwli"><div class="nwdot" style="background:${n.c}"></div>${n.l} ${fmt(n.v)}</div>`).join('');
+  $('nw-total').textContent=fmt(tot);
+  $('nw-retire').textContent=fmt(D.balances.emory401k+D.balances.oneok401k+D.balances.hsa);
+  $('nw-wf').textContent=fmt(D.balances.wfCurrent);
+  $('nw-crypto').textContent=fmt(D.balances.crypto);
+}
+
+/* ── LIVE DATA ── */
+function renderLive(){
+  // Accounts
+  const accts=NOTION.accounts;
+  $('notionAccounts').innerHTML=accts.map(a=>{
+    const isCash=['checking','savings','brokerage','ira','cash management'].includes(a.sub);
+    const isCredit=a.sub==='credit card';
+    const balColor=isCredit?(a.cur<=0?'var(--g)':'var(--r)'):'var(--g)';
+    const tag=a.sub==='checking'?'<span class="bdg b">checking</span>':a.sub==='brokerage'?'<span class="bdg p">brokerage</span>':a.sub==='401k'?'<span class="bdg g">401k</span>':a.sub==='credit card'?'<span class="bdg r">credit</span>':a.sub==='hsa'?'<span class="bdg t">hsa</span>':'<span class="bdg">'+a.sub+'</span>';
+    return`<div class="acct-row">
+      <div><div class="acct-name">${a.name}</div><div class="acct-sub">${tag} · ${a.bucket}</div></div>
+      <div class="acct-bal" style="color:${balColor}">$${a.cur.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+    </div>`;
+  }).join('');
+
+  // Transactions table
+  const txns=NOTION.transactions;
+  $('notionTxns').innerHTML=`<thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th></tr></thead><tbody>`+
+  txns.map(t=>`<tr class="${t.type==='Income'?'income':'expense'}">
+    <td style="font-family:var(--fm);font-size:11px">${t.date}</td>
+    <td style="font-size:12px">${t.summary}</td>
+    <td><span class="bdg ${t.type==='Income'?'g':'a'}">${t.category||t.type}</span></td>
+    <td class="${t.amount>=0?'g':'re'}">${fmt(Math.abs(t.amount))}</td>
+  </tr>`).join('')+'</tbody>';
+
+  // Category spending
+  const cats={};
+  txns.filter(t=>t.amount<0).forEach(t=>{
+    const c=t.category||'Other';
+    cats[c]=(cats[c]||0)+Math.abs(t.amount);
+  });
+  const catColors={'Food & Dining':'#ffb830','Savings/Investment':'#00d97e','Debt':'#ff5f5f','House Cleaning':'#4fa3ff','Transfer':'#9b7bff','Bills & Utilities':'#26d4c0'};
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const maxSpend=sorted[0]?.[1]||1;
+  $('catSpending').innerHTML=sorted.map(([cat,amt])=>`<div class="cat-row">
+    <div class="cat-name">${cat}</div>
+    <div class="cat-bar-wrap"><div class="cat-bar-fill" style="width:${(amt/maxSpend*100).toFixed(0)}%;background:${catColors[cat]||'#4fa3ff'}"></div></div>
+    <div class="cat-amt">${fmt(amt)}</div>
+  </div>`).join('');
+
+  // Income/expense summary
+  const totalIncome=txns.filter(t=>t.amount>0).reduce((a,t)=>a+t.amount,0);
+  const totalExpense=txns.filter(t=>t.amount<0).reduce((a,t)=>a+Math.abs(t.amount),0);
+  const net=totalIncome-totalExpense;
+  $('incomeExpSummary').innerHTML=`
+    <div class="csm"><div class="ct">Income (May 1)</div><div class="cd g">${fmt(totalIncome)}</div><div class="cs g">3 payrolls received</div></div>
+    <div class="csm"><div class="ct">Expenses (May 1)</div><div class="cd r">${fmt(totalExpense)}</div><div class="cs">Including goals + bills</div></div>
+    <div class="csm"><div class="ct">Net (May 1)</div><div class="cd ${net>=0?'g':'r'}">${fmt(Math.abs(net))}</div><div class="cs ${net>=0?'g':'r'}">${net>=0?'surplus':'deficit'}</div></div>
+    <div class="csm"><div class="ct">Data source</div><div class="cd b" style="font-size:18px">Notion</div><div class="cs t">Finance Manager Plus</div></div>`;
+
+  // Income chart
+  if(iChart){iChart.destroy();iChart=null;}
+  const ctx=$('incomeChart');if(!ctx)return;
+  iChart=new Chart(ctx,{type:'bar',data:{labels:['May 1, 2026'],datasets:[
+    {label:'Income',data:[totalIncome],backgroundColor:'rgba(0,217,126,.6)',borderColor:'#00d97e',borderWidth:1.5,borderRadius:4},
+    {label:'Expenses',data:[totalExpense],backgroundColor:'rgba(255,95,95,.5)',borderColor:'#ff5f5f',borderWidth:1.5,borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a8496',font:{size:11}}}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString(),color:'#3c4455'},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'transparent'}},x:{ticks:{color:'#3c4455'},grid:{display:false},border:{color:'transparent'}}}}});
+}
+
+/* ── PAYCHECKS ── */
+function renderPaychecks(C){
+  const p3=Math.round(C.p3),p2=Math.round(C.p2);
+  const ef1b3=p3-D.wedWeekly-D.dmMin, ef1b2=Math.max(0,p2-D.wedWeekly-D.dmMin);
+  $('weekTypeCards').innerHTML=`
+  <div class="wkc w3">
+    <div class="wk-title">3-income week <span class="bdg g" style="font-size:10px;margin-left:6px">ONEOK + Gore + Warner</span></div>
+    <div class="wk-sub">Weeks 1,3,5... · ONEOK biweekly aligns here · Notion confirmed ${NOTION.transactions.filter(t=>t.amount>0).length} payrolls May 1</div>
+    <div class="wkr"><span class="wkl">ONEOK (biweekly)</span><span class="wkv g">+$${D.oneok.toLocaleString()}</span></div>
+    <div class="wkr"><span class="wkl">Insight Global (weekly)</span><span class="wkv g">+$${D.ig.toLocaleString()}</span></div>
+    <div class="wkr"><span class="wkl">Warner Bros (weekly)</span><span class="wkv g">+$${D.wb.toLocaleString()}</span></div>
+    <div class="wk-tot"><span>Gross income</span><span style="color:var(--g);font-family:var(--fm)">${fmt(C.i3)}</span></div>
+    <div style="height:8px"></div>
+    <div class="wkr"><span class="wkl">Fixed set-aside (÷4.33)</span><span class="wkv d">−$${Math.round(C.fixWk).toLocaleString()}</span></div>
+    <div class="wkr"><span class="wkl">Lifestyle (÷4.33)</span><span class="wkv d">−$${Math.round(C.varWk).toLocaleString()}</span></div>
+    <div class="wk-tot"><span>Deployable to goals</span><span style="color:var(--g);font-family:var(--fm)">${fmt(p3)}</span></div>
+  </div>
+  <div class="wkc w2">
+    <div class="wk-title">2-income week <span class="bdg b" style="font-size:10px;margin-left:6px">Gore + Warner only</span></div>
+    <div class="wk-sub">Weeks 2,4,6... · no ONEOK this week · Gore confirmed in Notion</div>
+    <div class="wkr"><span class="wkl">ONEOK</span><span class="wkv d">— not this week</span></div>
+    <div class="wkr"><span class="wkl">Insight Global</span><span class="wkv b">+$${D.ig.toLocaleString()}</span></div>
+    <div class="wkr"><span class="wkl">Warner Bros</span><span class="wkv b">+$${D.wb.toLocaleString()}</span></div>
+    <div class="wk-tot"><span>Gross income</span><span style="color:var(--b);font-family:var(--fm)">${fmt(C.i2)}</span></div>
+    <div style="height:8px"></div>
+    <div class="wkr"><span class="wkl">Fixed set-aside (÷4.33)</span><span class="wkv d">−$${Math.round(C.fixWk).toLocaleString()}</span></div>
+    <div class="wkr"><span class="wkl">Lifestyle (÷4.33)</span><span class="wkv d">−$${Math.round(C.varWk).toLocaleString()}</span></div>
+    <div class="wk-tot"><span>Deployable to goals</span><span style="color:var(--b);font-family:var(--fm)">${fmt(p2)}</span></div>
+  </div>`;
+
+  const rows=C.weeks.slice(0,10);
+  $('paycheckSchedule').innerHTML=`<thead><tr><th>Wk</th><th>Date</th><th>Type</th><th>Gross</th><th>Deployable</th><th>Wedding</th><th>EF</th><th>D&M</th></tr></thead><tbody>`+
+  rows.map(r=>`<tr class="${r.hasO?'w3':'w2'}">
+    <td style="font-family:var(--fm)">${r.wk}</td><td style="font-family:var(--fm);white-space:nowrap">${r.ds}</td>
+    <td>${r.hasO?'<span class="bdg g">3×</span>':'<span class="bdg b">2×</span>'}</td>
+    <td class="${r.hasO?'g':'b'}">${fmt(r.inc)}</td><td class="r">${fmt(r.pool)}</td>
+    <td class="a">${r.wedA>0?fmt(r.wedA):'—'}</td><td class="re">${r.efA>0?fmt(r.efA):'—'}</td>
+    <td class="b">${fmt(r.dmA)}</td>
+  </tr>`).join('')+'</tbody>';
+
+  const start=new Date(D.oneokStartDate||'2026-05-01');
+  const md={};
+  for(let wk=1;wk<=52;wk++){
+    const d=new Date(start.getTime()+(wk-1)*7*86400000);
+    if(d.getFullYear()>2027)break;
+    const k=d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+    if(!md[k])md[k]={wks:0,ok:0};
+    md[k].wks++;if(wk%2===1)md[k].ok++;
+  }
+  $('monthlyIncomeTable').innerHTML=`<thead><tr><th>Month</th><th>Weeks</th><th>ONEOK pays</th><th>Total income</th></tr></thead><tbody>`+
+  Object.entries(md).slice(0,8).map(([m,v])=>{
+    const tot=v.wks*(D.ig+D.wb)+v.ok*D.oneok;
+    return`<tr><td>${m}</td><td class="r">${v.wks}${v.wks===5?' <span class="bdg g" style="font-size:9px">5-wk</span>':''}</td><td class="r">${v.ok}</td><td class="g">${fmt(tot)}</td></tr>`;
+  }).join('')+'</tbody>';
+
+  $('phaseAllocTable').innerHTML=`<thead><tr><th>Phase</th><th>Week type</th><th>Income</th><th>Pool</th><th>Wedding</th><th>EF</th><th>D&M</th></tr></thead><tbody>
+    <tr class="p1"><td rowspan="2"><span class="bdg a">P1</span></td><td><span class="bdg g" style="font-size:10px">3×</span></td><td class="g">${fmt(C.i3)}</td><td class="r">${fmt(p3)}</td><td class="a">${fmt(D.wedWeekly)}</td><td class="re">${fmt(ef1b3)}</td><td style="color:var(--tx3);text-align:right;font-family:var(--fm)">$${D.dmMin}</td></tr>
+    <tr class="p1"><td><span class="bdg b" style="font-size:10px">2×</span></td><td class="b">${fmt(C.i2)}</td><td class="r">${fmt(p2)}</td><td class="a">${fmt(Math.min(D.wedWeekly,p2))}</td><td class="re">${fmt(ef1b2)}</td><td style="color:var(--tx3);text-align:right;font-family:var(--fm)">$${D.dmMin}</td></tr>
+    <tr class="p2"><td rowspan="2"><span class="bdg r">P2</span></td><td><span class="bdg g" style="font-size:10px">3×</span></td><td class="g">${fmt(C.i3)}</td><td class="r">${fmt(p3)}</td><td style="color:var(--tx3);text-align:right">—</td><td class="re">${fmt(p3-D.dmMin)}</td><td style="color:var(--tx3);text-align:right;font-family:var(--fm)">$${D.dmMin}</td></tr>
+    <tr class="p2"><td><span class="bdg b" style="font-size:10px">2×</span></td><td class="b">${fmt(C.i2)}</td><td class="r">${fmt(p2)}</td><td style="color:var(--tx3);text-align:right">—</td><td class="re">${fmt(p2-D.dmMin)}</td><td style="color:var(--tx3);text-align:right;font-family:var(--fm)">$${D.dmMin}</td></tr>
+    <tr class="p3"><td rowspan="2"><span class="bdg g">P3</span></td><td><span class="bdg g" style="font-size:10px">3×</span></td><td class="g">${fmt(C.i3)}</td><td class="r">${fmt(p3)}</td><td style="color:var(--tx3);text-align:right">—</td><td style="color:var(--tx3);text-align:right">—</td><td class="g">${fmt(p3)}</td></tr>
+    <tr class="p3"><td><span class="bdg b" style="font-size:10px">2×</span></td><td class="b">${fmt(C.i2)}</td><td class="r">${fmt(p2)}</td><td style="color:var(--tx3);text-align:right">—</td><td style="color:var(--tx3);text-align:right">—</td><td class="g">${fmt(p2)}</td></tr>
+  </tbody>`;
+}
+
+/* ── CALENDAR ── */
+function renderCalendar(C){
+  const phRow={'1A':'p1','1B':'p1','2':'p2','3':'p3'};
+  $('calTbl').innerHTML=`<thead><tr><th>Wk</th><th>Date</th><th>Type</th><th>Ph</th><th>Gross</th><th>WF</th><th>Wed dep</th><th>Wed bal</th><th>EF dep</th><th>EF bal</th><th>D&M dep</th><th>D&M bal</th></tr></thead><tbody>`+
+  C.weeks.map(r=>`<tr class="${phRow[r.phase]||''}">
+    <td style="font-family:var(--fm)">${r.wk}</td><td style="white-space:nowrap;font-family:var(--fm)">${r.ds}</td>
+    <td>${r.hasO?'<span class="bdg g" style="font-size:9px">3×</span>':'<span class="bdg b" style="font-size:9px">2×</span>'}</td>
+    <td><span class="bdg ${r.phase==='3'?'g':r.phase==='2'?'r':'a'}">${r.phase}</span></td>
+    <td style="color:${r.hasO?'var(--g)':'var(--b)'};text-align:right;font-family:var(--fm)">${fmt(r.inc)}</td>
+    <td style="color:${r.wfA>0?'var(--a)':'var(--tx3)'};text-align:right;font-family:var(--fm)">${r.wfA>0?fmt(r.wfA):'—'}</td>
+    <td class="${r.wedDone?'g':'a'}">${fmt(r.wedA)}</td>
+    <td style="color:${r.wedDone?'var(--g)':'var(--tx)'};font-weight:${r.wedDone?'500':'400'};font-family:var(--fm)">${fmt(r.wed)}${r.wedDone?' ✓':''}</td>
+    <td class="re">${fmt(r.efA)}</td>
+    <td style="color:${r.efDone?'var(--g)':'var(--tx)'};font-weight:${r.efDone?'500':'400'};font-family:var(--fm)">${fmt(r.ef)}${r.efDone?' ✓':''}</td>
+    <td class="b">${fmt(r.dmA)}</td>
+    <td style="color:var(--b);font-family:var(--fm)">${fmt(r.dm)}</td>
+  </tr>`).join('')+'</tbody>';
+
+  if(gChart){gChart.destroy();gChart=null;}
+  const ctx=$('growthChart');if(!ctx)return;
+  gChart=new Chart(ctx,{type:'line',data:{labels:C.weeks.map(w=>w.ds),datasets:[
+    {label:'Emergency Fund',data:C.weeks.map(w=>w.ef),borderColor:'#ff5f5f',backgroundColor:'rgba(255,95,95,.06)',tension:.35,borderWidth:2.5,fill:true},
+    {label:'Wedding Fund',data:C.weeks.map(w=>w.wed),borderColor:'#ffb830',backgroundColor:'transparent',tension:.35,borderDash:[5,3],borderWidth:2},
+    {label:'D&M Investment',data:C.weeks.map(w=>w.dm),borderColor:'#4fa3ff',backgroundColor:'transparent',tension:.35,borderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)}`}}},scales:{y:{ticks:{callback:v=>'$'+Math.round(v/1000)+'K',color:'#3c4455'},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'transparent'}},x:{ticks:{color:'#3c4455',autoSkip:true,maxTicksLimit:8},grid:{display:false},border:{color:'transparent'}}}}});
+  $('chartLeg').innerHTML=[['#ff5f5f','Emergency Fund'],['#ffb830','Wedding Fund'],['#4fa3ff','D&M']]
+    .map(([c,l])=>`<span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)"><span style="width:20px;height:2px;background:${c};display:inline-block"></span>${l}</span>`).join('');
+
+  const ws=C.wedWk?wkStr(C,C.wedWk):'—', es=C.efWk?wkStr(C,C.efWk):'—';
+  const lastW=C.weeks[C.weeks.length-1];
+  $('completionSummary').innerHTML=[
+    ['WF buffer funded','Week 1 · May 7','var(--g)'],['Wedding funded ('+fmt(D.balances.wedTarget)+')',ws,'var(--a)'],
+    ['Wedding date',D.weddingDate,'var(--tx)'],['EF fully funded ('+fmt(D.balances.efTarget)+')',es,'var(--r)'],
+    ['Phase 3 D&M begins',es,'var(--g)'],['D&M at Phase 3 start',lastW?fmt(lastW.dm):'—','var(--b)'],
+    ['Phase 3 monthly avg',fmt(C.dm3Monthly)+'/mo','var(--g)']
+  ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--tx2)">${l}</span><span style="color:${c};font-family:var(--fm)">${v}</span></div>`).join('');
+
+  let dm=D.balances.dmCurrent;
+  $('dmMilestones').innerHTML=[50000,100000,150000,200000].map(tgt=>{
+    let wk=null;for(const w of C.weeks){if(w.dm>=tgt&&!wk){wk=w;break;}}
+    const dt=wk?wk.ds:'Phase 3+';
+    return`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--tx2)">D&M hits ${fmt(tgt)}</span><span style="color:var(--b);font-family:var(--fm)">${dt}</span></div>`;
+  }).join('');
+}
+
+/* ── GOALS ── */
+function renderGoals(C){
+  const ws=C.wedWk?wkStr(C,C.wedWk):'—', es=C.efWk?wkStr(C,C.efWk):'—';
+  const required=[
+    {n:'Emergency Fund',cur:D.balances.efCurrent,tgt:D.balances.efTarget,c:'#ff5f5f',acct:'Z52155929 · Notion live',note:`Funded ${es}`},
+    {n:'Wedding Fund',cur:D.balances.wedCurrent,tgt:D.balances.wedTarget,c:'#ffb830',acct:'Z36461855 · Notion live',note:`Funded ${ws} · $${D.balances.wedPaid.toLocaleString()} already paid`},
+    {n:'D&M Investment',cur:D.balances.dmCurrent,tgt:50000,c:'#4fa3ff',acct:'Z33678026 · Notion live',note:`$${D.dmMin}/wk now → ${fmt(C.dm3Monthly)}/mo in Phase 3`},
+    {n:'WF Checking Buffer',cur:D.balances.wfCurrent,tgt:D.balances.wfTarget,c:'#00d97e',acct:'WF 3284 · Notion live',note:'Fund this week · '+fmt(Math.max(0,D.balances.wfTarget-D.balances.wfCurrent))+' gap'},
+  ];
+  $('requiredGoals').innerHTML=required.map(g=>{
+    const p=pct(g.cur,g.tgt);
+    return`<div class="goal-card"><div class="goal-tag"><span class="bdg a">Required</span><span style="color:var(--te);font-family:var(--fm);font-size:10px">⬡ ${g.acct}</span></div>
+      <div class="prog-h"><span class="prog-n">${g.n}</span><span style="font-size:12px;font-weight:500;color:${g.c};font-family:var(--fm)">${p}%</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);margin:5px 0;font-family:var(--fm)">
+        <span>Current: <strong style="color:${g.c}">${EN(g.n==='Emergency Fund'?'balances.efCurrent':g.n==='Wedding Fund'?'balances.wedCurrent':g.n==='D&M Investment'?'balances.dmCurrent':'balances.wfCurrent','$')}</strong></span>
+        <span>Target: <strong>${fmt(g.tgt)}</strong></span>
+        <span>Gap: <strong>${fmt(g.tgt-g.cur)}</strong></span>
+      </div>
+      <div class="prog-bar" style="height:6px"><div class="prog-fill" style="width:${p}%;background:${g.c}"></div></div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:4px;font-family:var(--fm)">${g.note}</div>
+    </div>`;
+  }).join('');
+
+  const pg=D.personalGoals||[];
+  $('noGoalsMsg').style.display=pg.length===0?'block':'none';
+  $('personalGoals').innerHTML=pg.map((g,i)=>{
+    const p=pct(g.current,g.target);
+    return`<div class="goal-card custom"><div class="goal-actions">
+        <button class="goal-btn" onclick="addDeposit(${i})">+ Deposit</button>
+        <button class="goal-btn" onclick="editGoal(${i})">Edit</button>
+        <button class="goal-btn del" onclick="deleteGoal(${i})">Delete</button>
+      </div>
+      <div class="goal-tag"><span class="bdg t">Personal</span>${g.notes?`<span style="color:var(--tx3)">${g.notes}</span>`:''}</div>
+      <div class="prog-h"><span class="prog-n">${g.emoji||''} ${g.name}</span><span style="font-size:12px;font-weight:500;color:${g.color};font-family:var(--fm)">${p}%</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);margin:5px 0;font-family:var(--fm)">
+        <span>Current: <strong style="color:${g.color}">${fmt(g.current)}</strong></span>
+        <span>Target: <strong>${fmt(g.target)}</strong></span>
+        <span>Gap: <strong>${fmt(g.target-g.current)}</strong></span>
+      </div>
+      <div class="prog-bar" style="height:6px"><div class="prog-fill" style="width:${p}%;background:${g.color}"></div></div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:5px;display:flex;justify-content:space-between;font-family:var(--fm)">
+        <span>${p}% complete · update anytime</span>
+        ${g.createdAt?`<span>${new Date(g.createdAt).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── PERSONAL GOAL MGMT ── */
+function openAddGoal(){editingGoalId=null;$('modalTitle').textContent='Add a personal goal';['gName','gEmoji','gNotes'].forEach(id=>$(id).value='');['gCurrent','gTarget'].forEach(id=>$(id).value='');selectedColor=COLORS[0];buildColorGrid();$('addGoalModal').classList.add('show');setTimeout(()=>$('gName').focus(),50);}
+function editGoal(i){editingGoalId=i;const g=D.personalGoals[i];$('modalTitle').textContent='Edit goal';$('gName').value=g.name;$('gEmoji').value=g.emoji||'';$('gCurrent').value=g.current;$('gTarget').value=g.target;$('gNotes').value=g.notes||'';selectedColor=g.color||COLORS[0];buildColorGrid();$('addGoalModal').classList.add('show');}
+function closeAddGoal(){$('addGoalModal').classList.remove('show');}
+function buildColorGrid(){$('colorGrid').innerHTML=COLORS.map(c=>`<div class="cswatch ${c===selectedColor?'sel':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');}
+function selectColor(c){selectedColor=c;buildColorGrid();}
+function saveGoal(){const name=$('gName').value.trim();if(!name){$('gName').focus();return;}const g={id:Date.now(),name,emoji:$('gEmoji').value.trim(),current:parseFloat($('gCurrent').value)||0,target:parseFloat($('gTarget').value)||1000,notes:$('gNotes').value.trim(),color:selectedColor,createdAt:new Date().toISOString()};if(editingGoalId!==null){D.personalGoals[editingGoalId]={...D.personalGoals[editingGoalId],...g};}else{if(!D.personalGoals)D.personalGoals=[];D.personalGoals.push(g);}saveData();renderAll();closeAddGoal();}
+function deleteGoal(i){if(!confirm('Delete this goal?'))return;D.personalGoals.splice(i,1);saveData();renderGoals(calc());}
+function addDeposit(i){const g=D.personalGoals[i];const amt=parseFloat(prompt(`Add deposit to "${g.name}" (current: ${fmt(g.current)})`)||'0');if(amt>0){D.personalGoals[i].current=Math.min(g.current+amt,g.target);saveData();renderGoals(calc());showFlash(`+${fmt(amt)} added to ${g.name}`);}}
+
+/* ── BUDGET ── */
+function renderBudget(C){
+  const fItems=[['District Lofts mortgage','fixed.mortgage','Dovenmuehle'],['District Lofts HOA','fixed.hoa','Monthly'],['Airbnb mortgage buffer','fixed.airbnb','Airbnb shortfall'],['SBA loan (EIDL)','fixed.sba','Fixed'],['Emory 401k loan repayment','fixed.loan401k','→ your Emory balance'],['Comcast (personal only)','fixed.comcast','Rental lines → rental accounts']];
+  $('fixedTable').innerHTML=`<thead><tr><th>Expense</th><th>Monthly</th><th>Weekly</th><th>Notes</th></tr></thead><tbody>${fItems.map(([n,k,note])=>`<tr><td>${n}</td><td class="a">${EN(k,'$')}</td><td class="r" style="color:var(--tx3);font-family:var(--fm)">$${Math.round(getV(D,k)/4.33).toLocaleString()}</td><td class="dim">${note}</td></tr>`).join('')}<tr class="tr"><td>Total fixed</td><td class="a">${fmt(C.fixedT)}</td><td class="r" style="color:var(--a)">$${Math.round(C.fixedT/4.33).toLocaleString()}</td><td></td></tr></tbody>`;
+  const vItems=[['Food & dining (both)','variable.food'],['Groceries & household','variable.groceries'],['Transportation / gas','variable.transport'],['Subscriptions','variable.subscriptions'],['House cleaning','variable.cleaning'],['Pet','variable.pet'],['Dagem guilt-free','variable.dagemFree'],['Meley guilt-free','variable.meleyFree'],['Personal care / misc','variable.misc']];
+  $('varTable').innerHTML=`<thead><tr><th>Category</th><th>Monthly</th><th>Weekly</th></tr></thead><tbody>${vItems.map(([n,k])=>`<tr><td>${n}</td><td class="a">${EN(k,'$')}</td><td class="r" style="color:var(--tx3)">$${Math.round(getV(D,k)/4.33).toLocaleString()}</td></tr>`).join('')}<tr class="tr"><td>Variable total</td><td class="a">${fmt(C.varT)}</td><td class="r" style="color:var(--a)">$${Math.round(C.varT/4.33).toLocaleString()}</td></tr></tbody>`;
+  const p3=Math.round(C.p3),p2=Math.round(C.p2);
+  $('zeroMath').innerHTML=`
+    <div class="er"><span class="el">3-income week gross</span><span class="ev g">${fmt(C.i3)}</span></div>
+    <div class="er"><span class="el">2-income week gross</span><span class="ev b">${fmt(C.i2)}</span></div>
+    <div class="er"><span class="el">− Fixed (÷4.33)</span><span class="ev a">−${fmt(C.fixWk)}</span></div>
+    <div class="er"><span class="el">− Lifestyle (÷4.33)</span><span class="ev a">−${fmt(C.varWk)}</span></div>
+    <div class="er"><span class="el">3-income pool</span><span class="ev g">${fmt(p3)}</span></div>
+    <div class="er"><span class="el">2-income pool</span><span class="ev b">${fmt(p2)}</span></div>
+    <div class="er" style="border:none"><span class="el" style="font-weight:600">Avg monthly pool</span><span class="ev g" style="font-size:15px">${fmt(C.poolAvg)}</span></div>`;
+  $('phaseAllocBudget').innerHTML=`
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);padding:6px 0 4px;font-family:var(--fm)">Phase 1B</div>
+    <div class="er"><span class="el">Wedding (3-income)</span><span class="ev a">$${D.wedWeekly}/wk</span></div>
+    <div class="er"><span class="el">D&M minimum</span><span class="ev b">$${D.dmMin}/wk</span></div>
+    <div class="er"><span class="el">EF — 3-income</span><span class="ev r">$${(p3-D.wedWeekly-D.dmMin).toLocaleString()}/wk</span></div>
+    <div class="er"><span class="el">EF — 2-income</span><span class="ev r">$${Math.max(0,p2-D.wedWeekly-D.dmMin).toLocaleString()}/wk</span></div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);padding:10px 0 4px;font-family:var(--fm)">Phase 3</div>
+    <div class="er"><span class="el">D&M 3-income</span><span class="ev g">$${p3}/wk</span></div>
+    <div class="er" style="border:none"><span class="el">D&M 2-income</span><span class="ev g">$${p2}/wk</span></div>`;
+  $('pretaxRows').innerHTML=`
+    <div class="er"><span class="el">ONEOK 401k — employee</span><span class="ev b">$920 biweekly ($23,920/yr)</span></div>
+    <div class="er"><span class="el">HSA — reduce to $667/mo</span><span class="ev a">Currently $700 — over limit</span></div>
+    <div class="er"><span class="el">ONEOK employer match</span><span class="ev g">$276 biweekly (free)</span></div>
+    <div class="er" style="border:none"><span class="el">Profit sharing</span><span class="ev g">$2,166/quarter (free)</span></div>`;
+}
+
+/* ── RULES ── */
+function renderRules(){
+  const rules=[
+    {n:1,t:'Automate on payday — Notion confirms it works',d:'Your May 1 Notion data shows ONEOK, INSPYR and Insight Global all landed same day. Auto-transfers should leave WF the same day. Set it once.'},
+    {n:2,t:'Emergency fund is a vault — three-test rule',d:'Unexpected AND necessary AND no other option — all three. Lifestyle overages and Amex payments do not qualify. The Notion data shows you already sending $1K to EF on May 1. Keep it.'},
+    {n:3,t:'WF floor: $5,000 — current balance is $2,754',d:'Notion shows WF at $2,753.97 as of May 1. Fixed obligations = $6,588/mo. You need to fill the $2,246 gap this week. Priority #1 after setting up auto-transfers.'},
+    {n:4,t:'Wedding fund: hard deadline Jan 23, 2027',d:'Notion shows $28,022 in account. $18K more needed. At $1,250/wk done by Aug 7 — 5+ months before the wedding. Do not raid it.'},
+    {n:5,t:'D&M: VTI 80% + VXUS 20% — automate, never time',d:'Notion shows D&M at $9,976. Keep $500/wk flowing. Phase 3 brings $4,782/wk (3-income) or $2,425/wk (2-income). Do not stop, do not time the market.'},
+    {n:6,t:'3-income weeks: extra $2,357 goes to goals immediately',d:'Every ONEOK week you get $2,357 extra. Your Notion data confirmed this pattern on May 1. Route it automatically — no thinking required.'},
+    {n:7,t:'HSA: reduce from $700 → $667/mo immediately',d:'$700/mo = $8,400/yr over the $8,000 IRS limit. Notion shows Health Savings Account is active. Fix in ONEOK benefits portal today. 6% excise tax on overage.'},
+    {n:8,t:'Monthly CFO review + Notion sync — 1st of each month',d:'Check: Notion account balances, transactions vs. budget categories, WF floor, ONEOK 401k YTD, any goal withdrawals. Update dashboard balances from Notion.'},
+  ];
+  const r=ru=>`<div class="rule"><div class="rn">${ru.n}</div><div><div class="rt">${ET('rule'+ru.n+'Title',ru.t)}</div><div class="rd">${ru.d}</div></div></div>`;
+  $('rulesL').innerHTML=rules.slice(0,4).map(r).join('');
+  $('rulesR').innerHTML=rules.slice(4).map(r).join('');
+}
+
+/* ── CHECKLIST ── */
+function renderChecklist(C){
+  const ws=C.wedWk?wkStr(C,C.wedWk).split(',')[0]:'Aug 7';
+  const es=C.efWk?wkStr(C,C.efWk).split(',')[0]:'Sep 11';
+  const p3=Math.round(C.p3), p2=Math.round(C.p2);
+  const all={
+    'cl-today':[
+      {t:'Fix HSA: reduce $700 → $667/mo in ONEOK benefits',d:'Notion confirms HSA account active. $700/mo = $8,400/yr over $8,000 limit. Fix before next payroll.',tag:'Tax risk — do first'},
+      {t:'Fill WF to $5,000 — Notion shows $2,753.97 now',d:'Gap: $2,246. Transfer from any available source. Your fixed obligations are $6,588/mo — $5K is the minimum safe floor.',tag:'Liquidity — urgent'},
+      {t:'Set EF auto-transfer: $1,857/wk to Z52155929',d:'Notion shows EF at $11,567. Target $50K. On 3-income weeks you can push $3,032/wk. Average $1,857/wk for simplicity.',tag:'EF priority #1'},
+      {t:'Set Wedding auto-transfer: $1,250/wk to Z36461855',d:'Notion shows Wedding at $28,023. $18K more needed. Done by '+ws+'. Cancel when balance hits $46K.',tag:'Jan 23 deadline'},
+      {t:'Set D&M auto-invest: $500/wk into Z33678026',d:'Notion shows D&M at $9,977. VTI 80% + VXUS 20%. Update to full rate on '+es+'.',tag:'Wealth engine'},
+      {t:'Confirm both Amex cards on full-balance autopay',d:'Notion shows $2,426 Amex ACH payment on May 1 — confirming autopay is running. Verify both cards.',tag:'Zero balance'},
+    ],
+    'cl-week':[
+      {t:'Mark ONEOK weeks in your calendar — 3-income pattern confirmed',d:'Notion confirmed ONEOK, INSPYR, and Insight all hit May 1. Set biweekly repeating "ONEOK week" event starting May 1.',tag:'3× vs 2× weeks'},
+      {t:'Categorize uncategorized May 1 transactions in Notion',d:'5 of 7 May 1 transactions have no category yet. Open Finance Manager Plus and assign categories so the Live Data tab reflects accurately.',tag:'Notion accuracy'},
+      {t:'Set '+ws+' calendar reminder — Phase 2',d:'Wedding funded. Cancel $1,250/wk wedding. Boost EF to $'+p3+' (3-income) / $'+p2+' (2-income) per week.',tag:'Phase 2 trigger'},
+      {t:'Set '+es+' calendar reminder — Phase 3',d:'EF funded. Cancel EF transfer. D&M goes to $'+p3+' / $'+p2+' per week. Full wealth mode.',tag:'Phase 3 — the big one'},
+    ],
+    'cl-phases':[
+      {t:ws+' — Phase 2: cancel wedding, boost EF',d:'Wedding hits $46K. Stop $1,250/wk. EF Phase 2 rate: $'+p3+'/wk (3-income), $'+p2+'/wk (2-income).',tag:'Phase 2'},
+      {t:es+' — Phase 3: cancel EF, max D&M',d:'EF hits $50K. Stop EF transfer. D&M: $'+p3+'/wk (3-income), $'+p2+'/wk (2-income). Permanent.',tag:'Phase 3'},
+      {t:'Update W-4 at ONEOK + Inspyr by July',d:'Filing Married HH but withholding Single. CPA first. $300–700/mo more take-home potential.',tag:'$3.6–8.4K/yr'},
+      {t:'Monthly: update Notion account balances on 1st',d:'Open Finance Manager Plus → Accounts. Update Current Balance on each account. Dashboard reflects instantly.',tag:'Every month'},
+    ],
+    'cl-ongoing':[
+      {t:'Monthly CFO review — 1st of each month',d:'Balances vs. calendar, Amex vs. budget, WF floor, 401k YTD, any goal withdrawals. 30 min.',tag:'Every month'},
+      {t:'Categorize transactions in Notion weekly',d:'The Live Data tab reads your Notion categories. The more you categorize, the more accurate the spending breakdown.',tag:'Every week'},
+      {t:'Personal goals — add a deposit whenever you have extra',d:'Goals tab → + Add goal or + Deposit. Baby fund, vacation, anything. No required amount.',tag:'Your call'},
+    ]
+  };
+  Object.entries(all).forEach(([id,list])=>{
+    const el=$(id);if(!el)return;
+    const sv=JSON.parse(localStorage.getItem('ck-v7-'+id)||'[]');
+    el.innerHTML=list.map((item,i)=>`<div class="cl ${sv.includes(i)?'done':''}" onclick="toggleCL('${id}',${i},this)"><div class="cl-box">${sv.includes(i)?'✓':''}</div><div><div class="cl-t">${item.t}</div><div class="cl-d">${item.d}</div><div class="cl-tag">${item.tag}</div></div></div>`).join('');
+  });
+}
+function toggleCL(id,i,el){const sv=JSON.parse(localStorage.getItem('ck-v7-'+id)||'[]');const x=sv.indexOf(i);if(x>-1)sv.splice(x,1);else sv.push(i);localStorage.setItem('ck-v7-'+id,JSON.stringify(sv));el.classList.toggle('done');el.querySelector('.cl-box').textContent=sv.includes(i)?'✓':'';}
+
+/* ── NAV ── */
+function show(id){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));$('pg-'+id).classList.add('on');document.querySelectorAll('.tab').forEach(t=>{if(t.getAttribute('onclick')?.includes("'"+id+"'"))t.classList.add('on')});if(id==='calendar')setTimeout(()=>renderCalendar(calc()),120);}
+
+document.addEventListener('DOMContentLoaded',()=>{loadData();renderAll();});
+</script>
+</body>
+</html>
